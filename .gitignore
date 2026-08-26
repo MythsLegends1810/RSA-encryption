@@ -1,0 +1,7 @@
+# VS Code workspace settings
+.vscode/
+
+# C++ build outputs
+*.exe
+*.out
+*.o
