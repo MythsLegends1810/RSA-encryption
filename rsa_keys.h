@@ -1,7 +1,7 @@
 #ifndef RSA_KEYS_H
 #define RSA_KEYS_H
 
-#include <boost/multiprecision/cpp_int.h>
+#include <boost/multiprecision/cpp_int.hpp>
 
 using boost::multiprecision::cpp_int;
 
