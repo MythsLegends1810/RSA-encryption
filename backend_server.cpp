@@ -10,39 +10,49 @@ using namespace std;
 
 using boost::multiprecision::cpp_int;
 
-const string KEYS_FILE = "/app/rsa_keys.json";
+inline string getKeysFilePath() {
+    ifstream check("/app/rsa_keys.txt");
+    if (check.is_open()) {
+        check.close();
+        return "/app/rsa_keys.txt";
+    }
+    ofstream test("/app/rsa_keys.txt", ios::app);
+    if (test.is_open()) {
+        test.close();
+        return "/app/rsa_keys.txt";
+    }
+    return "rsa_keys.txt";
+}
 
 void saveKeysToFile(const RSAKeys& keys) {
-    ofstream outFile(KEYS_FILE);
-    outFile << "{\"P\":\"" << keys.P << "\",\"Q\":\"" << keys.Q 
-            << "\",\"N\":\"" << keys.N << "\",\"T\":\"" << keys.T 
-            << "\",\"E\":\"" << keys.E << "\",\"D\":\"" << keys.D << "\"}";
+    ofstream outFile(getKeysFilePath());
+    outFile << "P:" << keys.P << "\n"
+            << "Q:" << keys.Q << "\n"
+            << "N:" << keys.N << "\n"
+            << "T:" << keys.T << "\n"
+            << "E:" << keys.E << "\n"
+            << "D:" << keys.D << "\n";
     outFile.close();
 }
+
 bool loadKeysFromFile(RSAKeys& keys) {
-    ifstream inFile(KEYS_FILE);
+    ifstream inFile(getKeysFilePath());
     if (!inFile.is_open()) return false;
-    
-    stringstream buffer;
-    buffer << inFile.rdbuf();
-    string json = buffer.str();
+
+    string line;
+    while (getline(inFile, line)) {
+        size_t colon = line.find(':');
+        if (colon == string::npos) continue;
+        string key = line.substr(0, colon);
+        string value = line.substr(colon + 1);
+        if (key == "P") keys.P = cpp_int(value);
+        else if (key == "Q") keys.Q = cpp_int(value);
+        else if (key == "N") keys.N = cpp_int(value);
+        else if (key == "T") keys.T = cpp_int(value);
+        else if (key == "E") keys.E = cpp_int(value);
+        else if (key == "D") keys.D = cpp_int(value);
+    }
     inFile.close();
-    
-    auto extractString = [&](const string& key) -> string {
-        size_t start = json.find("\"" + key + "\":\"");
-        if (start == string::npos) return "";
-        start += key.length() + 5;
-        size_t end = json.find("\"", start);
-        return json.substr(start, end - start);
-    };
-    
-    keys.P = cpp_int(extractString("P"));
-    keys.Q = cpp_int(extractString("Q"));
-    keys.N = cpp_int(extractString("N"));
-    keys.T = cpp_int(extractString("T"));
-    keys.E = cpp_int(extractString("E"));
-    keys.D = cpp_int(extractString("D"));
-    
     return true;
 }
 
@@ -73,10 +83,18 @@ int main(int argc, char* argv[]) {
     RSAKeys keys;
     bool hasSavedKeys = loadKeysFromFile(keys);
 
-    // Skip generation for gen command even if no saved keys exist yet
+    // Skip generation check if explicit keys are provided or command is gen
     if (command != "gen" && !hasSavedKeys) {
-        cerr << "Error: Keys file not found. Run 'gen' first." << endl;
-        return 1;
+        bool hasExplicitKeys = false;
+        if (command == "encrypt" && argc >= 5) hasExplicitKeys = true;
+        if (command == "decrypt" && argc >= 5) hasExplicitKeys = true;
+        if (command == "sign" && argc >= 5) hasExplicitKeys = true;
+        if (command == "verify" && argc >= 5) hasExplicitKeys = true;
+
+        if (!hasExplicitKeys) {
+            cerr << "Error: Keys file not found. Run 'gen' first." << endl;
+            return 1;
+        }
     }
 
     if (command == "gen") {
@@ -100,7 +118,7 @@ int main(int argc, char* argv[]) {
         cout << "Encoded:" << encoded << endl;
         cout << "Encrypted:" << encrypted << endl;
         cout << "N:" << useN << endl;
-        cout << "E:" << useE << endl;
+        cout << "D:" << keys.D << endl;
     } else if (command == "decrypt" && argc >= 3) {
         string encStr = argv[2];
         cpp_int encrypted(encStr);
@@ -142,9 +160,11 @@ int main(int argc, char* argv[]) {
         
         // Override with provided N and E if given
         cpp_int useN = keys.N;
-        cpp_int useE = keys.E;
-        if (argc >= 6) {
+        cpp_int useE = keys.E.is_zero() ? cpp_int(65537) : keys.E;
+        if (argc >= 5) {
             useN = cpp_int(argv[4]);
+        }
+        if (argc >= 6) {
             useE = cpp_int(argv[5]);
         }
         

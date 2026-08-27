@@ -11,7 +11,7 @@ inline cpp_int convertToInt(const std::string& password) {
     cpp_int conversion{};
     for (char c : password) { 
         conversion = conversion << 8;
-        conversion += c;
+        conversion += static_cast<unsigned char>(c);
     }
     return conversion;
 }

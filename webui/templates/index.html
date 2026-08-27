@@ -12,31 +12,33 @@
       --primary: #58a6ff;
       --primary-2: #79c0ff;
       --accent: #f85149;
+      --success: #3fb950;
       --text: #c9d1d9;
       --text-dim: #8b949e;
       --border: #30363d;
+      --btn-secondary: #21262d;
     }
     * { box-sizing: border-box; }
     body {
       margin: 0; padding: 0;
       background: var(--bg-dark);
       color: var(--text);
-      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
       min-height: 100vh;
     }
     .container {
-      max-width: 960px;
+      max-width: 1000px;
       margin: 0 auto;
-      padding: 3rem 1.5rem;
+      padding: 2.5rem 1.25rem;
     }
     header {
       text-align: center;
-      margin-bottom: 3rem;
+      margin-bottom: 2.5rem;
     }
     h1 {
       font-size: 2.5rem;
       margin-bottom: 0.25rem;
-      background: linear-gradient(135deg, var(--primary), var(--accent));
+      background: linear-gradient(135deg, var(--primary), #a371f7);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
@@ -45,7 +47,7 @@
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
       gap: 1.5rem;
     }
 
@@ -54,30 +56,47 @@
       border: 1px solid var(--border);
       border-radius: 16px;
       padding: 1.75rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
       transition: transform .15s ease, box-shadow .15s ease;
     }
-    .card:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(0,0,0,0.45); }
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    }
 
     .card h2 {
       margin-top: 0;
-      font-size: 1.15rem;
+      font-size: 1.2rem;
       color: var(--primary-2);
       display: flex;
       align-items: center;
       gap: .6rem;
     }
     .badge {
-      display: inline-block;
-      padding: 0.15rem 0.5rem;
-      border-radius: 999px;
-      font-size: 0.7rem;
-      font-weight: 600;
-      letter-spacing: 0.02em;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      font-size: 0.75rem;
+      font-weight: 700;
       background: var(--primary);
       color: var(--bg-dark);
     }
 
-    label { display: block; font-size: .85rem; color: var(--text-dim); margin-bottom: .35rem; }
+    label {
+      display: block;
+      font-size: .85rem;
+      font-weight: 500;
+      color: var(--text-dim);
+      margin-bottom: .35rem;
+    }
+    .label-hint {
+      font-weight: normal;
+      font-size: .75rem;
+      color: #8b949e;
+    }
     input, textarea {
       width: 100%;
       padding: .65rem .75rem;
@@ -85,30 +104,57 @@
       border: 1px solid var(--border);
       background: var(--surface-2);
       color: var(--text);
-      font-family: ui-monospace, SFMono-Regular, monospace;
-      font-size: .9rem;
-      margin-bottom: 1rem;
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-size: .88rem;
+      margin-bottom: 0.85rem;
       transition: border-color .2s;
     }
-    input:focus, textarea:focus { outline: none; border-color: var(--primary); }
-    textarea { resize: vertical; min-height: 80px; }
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-top: 0.25rem;
+    }
 
     button {
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       gap: .5rem;
-      padding: .75rem 1.25rem;
+      padding: .7rem 1.25rem;
       border-radius: 8px;
       border: none;
       background: var(--primary);
       color: var(--bg-dark);
       font-weight: 700;
-      font-size: .95rem;
+      font-size: .92rem;
       cursor: pointer;
       transition: background .15s, transform .1s;
     }
     button:hover { background: var(--primary-2); transform: translateY(-1px); }
     button:active { transform: translateY(0); }
+
+    button.btn-secondary {
+      background: var(--btn-secondary);
+      color: var(--text);
+      border: 1px solid var(--border);
+      font-weight: 600;
+      font-size: .82rem;
+      padding: .45rem .85rem;
+    }
+    button.btn-secondary:hover {
+      background: #30363d;
+      color: #fff;
+    }
 
     .output {
       background: var(--bg-dark);
@@ -116,20 +162,45 @@
       border-radius: 10px;
       padding: 1rem;
       margin-top: 1rem;
-      font-family: ui-monospace, SFMono-Regular, monospace;
-      font-size: .8rem;
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-size: .82rem;
       line-height: 1.5;
-      min-height: 80px;
+      min-height: 60px;
       white-space: pre-wrap;
-      word-break: break-word;
+      word-break: break-all;
       overflow-x: auto;
     }
-    .output.success { border-color: #238636; }
-    .output.error { border-color: var(--accent); }
+    .output:empty { display: none; }
+    .output.success { border-color: var(--success); }
+    .output.error { border-color: var(--accent); color: #ff7b72; }
+
+    .tag-success {
+      color: var(--success);
+      font-weight: 700;
+    }
+    .tag-error {
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .advanced-toggle {
+      color: var(--primary);
+      background: none;
+      border: none;
+      padding: 0;
+      font-size: .8rem;
+      font-weight: 500;
+      cursor: pointer;
+      margin-bottom: .75rem;
+      display: inline-block;
+    }
+    .advanced-toggle:hover { text-decoration: underline; }
+    .advanced-section { display: none; margin-top: .25rem; }
+    .advanced-section.show { display: block; }
 
     .section-divider {
       border-top: 1px solid var(--border);
-      margin: 2.5rem 0 1.5rem;
+      margin: 2rem 0;
     }
 
     footer {
@@ -143,73 +214,129 @@
 <body>
   <div class="container">
     <header>
-      <h1>RSA Encryption</h1>
-      <p class="subtitle">Web UI for the C++ backend — generate keys, encrypt, decrypt, sign &amp; verify</p>
+      <h1>RSA Cryptosystem</h1>
+      <p class="subtitle">Interactive Web UI for C++ RSA Backend (Boost Multiprecision)</p>
     </header>
 
+    <!-- Key Generation -->
     <section class="grid" aria-label="Key Management">
-      <article class="card">
+      <article class="card" style="grid-column: 1 / -1;">
         <h2>Generate Keys <span class="badge">1</span></h2>
-        <p style="font-size:.9rem;color:var(--text-dim);margin-top:.25rem;">Generate a fresh RSA key pair using prime number generation.</p>
-        <button onclick="generateKeys()">Generate RSA Keys</button>
+        <p style="font-size:.9rem;color:var(--text-dim);margin:0 0 1rem;">Generate a fresh 256-bit prime RSA key pair ($P$, $Q$, $N$, $T$, $E$, $D$).</p>
+        <button id="btn-gen" onclick="generateKeys()">Generate RSA Keys</button>
         <div id="generate-output" class="output" aria-live="polite"></div>
       </article>
     </section>
 
     <div class="section-divider"></div>
 
+    <!-- Encrypt & Decrypt -->
     <section class="grid" aria-label="Encryption &amp; Decryption">
       <article class="card">
         <h2>Encrypt <span class="badge">2</span></h2>
-        <label for="enc-msg">Message</label>
+        <label for="enc-msg">Message to Encrypt</label>
         <textarea id="enc-msg" placeholder="Enter message to encrypt..."></textarea>
-        <button onclick="encryptMsg()">Encrypt</button>
+        
+        <button type="button" class="advanced-toggle" onclick="toggleAdvanced('enc-adv')">&#9656; Custom Public Key (Optional)</button>
+        <div id="enc-adv" class="advanced-section">
+          <label for="enc-e">E <span class="label-hint">(defaults to active session key)</span></label>
+          <input id="enc-e" placeholder="Public exponent E..." />
+          <label for="enc-n">N <span class="label-hint">(defaults to active session key)</span></label>
+          <input id="enc-n" placeholder="Modulus N..." />
+        </div>
+
+        <div class="btn-group">
+          <button id="btn-encrypt" onclick="encryptMsg()">Encrypt Message</button>
+        </div>
         <div id="encrypt-output" class="output" aria-live="polite"></div>
       </article>
 
       <article class="card">
         <h2>Decrypt <span class="badge">3</span></h2>
-        <label for="dec-enc">Encrypted value</label>
-        <input id="dec-enc" placeholder="Encrypted integer..." />
-        <label for="dec-p">P (prime)</label>
-        <input id="dec-p" placeholder="P..." />
-        <label for="dec-q">Q (prime)</label>
-        <input id="dec-q" placeholder="Q..." />
-        <button onclick="decryptMsg()">Decrypt</button>
+        <label for="dec-enc">Encrypted Ciphertext <span class="label-hint">(required)</span></label>
+        <input id="dec-enc" placeholder="Paste encrypted integer..." />
+        
+        <button type="button" class="advanced-toggle" onclick="toggleAdvanced('dec-adv')">&#9656; Custom Private Key / Primes (Optional)</button>
+        <div id="dec-adv" class="advanced-section">
+          <label for="dec-d">D <span class="label-hint">(Private Exponent — defaults to active session key)</span></label>
+          <input id="dec-d" placeholder="Private key D..." />
+          <label for="dec-n">N <span class="label-hint">(Modulus — defaults to active session key)</span></label>
+          <input id="dec-n" placeholder="Modulus N..." />
+          
+          <div style="border-top: 1px dashed var(--border); margin: .75rem 0; padding-top: .5rem;">
+            <span style="font-size: .8rem; color: var(--text-dim); display:block; margin-bottom:.5rem;">Or derive key from Primes:</span>
+            <label for="dec-p">P (Prime)</label>
+            <input id="dec-p" placeholder="Prime P..." />
+            <label for="dec-q">Q (Prime)</label>
+            <input id="dec-q" placeholder="Prime Q..." />
+          </div>
+        </div>
+
+        <div class="btn-group">
+          <button id="btn-decrypt" onclick="decryptMsg()">Decrypt Message</button>
+        </div>
         <div id="decrypt-output" class="output" aria-live="polite"></div>
       </article>
     </section>
 
     <div class="section-divider"></div>
 
+    <!-- Signing & Verification -->
     <section class="grid" aria-label="Signing &amp; Verification">
       <article class="card">
         <h2>Sign <span class="badge">4</span></h2>
-        <label for="sig-msg">Message</label>
-        <textarea id="sig-msg" placeholder="Message to sign..."></textarea>
-        <button onclick="signMsg()">Sign with Private Key</button>
+        <label for="sig-msg">Message to Sign</label>
+        <textarea id="sig-msg" placeholder="Enter message to sign..."></textarea>
+
+        <button type="button" class="advanced-toggle" onclick="toggleAdvanced('sig-adv')">&#9656; Custom Private Key (Optional)</button>
+        <div id="sig-adv" class="advanced-section">
+          <label for="sig-d">D <span class="label-hint">(defaults to active session key)</span></label>
+          <input id="sig-d" placeholder="Private key D..." />
+          <label for="sig-n">N <span class="label-hint">(defaults to active session key)</span></label>
+          <input id="sig-n" placeholder="Modulus N..." />
+        </div>
+
+        <div class="btn-group">
+          <button id="btn-sign" onclick="signMsg()">Sign with Private Key</button>
+        </div>
         <div id="sign-output" class="output" aria-live="polite"></div>
       </article>
 
       <article class="card">
         <h2>Verify <span class="badge">5</span></h2>
-        <label for="ver-msg">Message</label>
+        <label for="ver-msg">Message to Verify</label>
         <input id="ver-msg" placeholder="Original message..." />
-        <label for="ver-sig">Signature</label>
+        <label for="ver-sig">Digital Signature</label>
         <input id="ver-sig" placeholder="Signature integer..." />
-        <label for="ver-n">N (modulus)</label>
-        <input id="ver-n" placeholder="N..." />
-        <button onclick="verifyMsg()">Verify with Public Key</button>
+        
+        <button type="button" class="advanced-toggle" onclick="toggleAdvanced('ver-adv')">&#9656; Custom Public Key (Optional)</button>
+        <div id="ver-adv" class="advanced-section">
+          <label for="ver-n">N <span class="label-hint">(defaults to active session key)</span></label>
+          <input id="ver-n" placeholder="Modulus N..." />
+          <label for="ver-e">E <span class="label-hint">(defaults to active session key / 65537)</span></label>
+          <input id="ver-e" placeholder="Exponent E..." />
+        </div>
+
+        <div class="btn-group">
+          <button id="btn-verify" onclick="verifyMsg()">Verify Signature</button>
+        </div>
         <div id="verify-output" class="output" aria-live="polite"></div>
       </article>
     </section>
 
     <footer>
-      <p>Backed by <strong>C++ RSA backend</strong> using Boost Multiprecision. Deployed via Docker.</p>
+      <p>C++ RSA Backend &bull; Boost Multiprecision &bull; Web Interface</p>
     </footer>
   </div>
 
   <script>
+    let currentKeys = {};
+
+    function toggleAdvanced(id) {
+      const el = document.getElementById(id);
+      el.classList.toggle('show');
+    }
+
     async function fetchAPI(url, body) {
       const res = await fetch(url, {
         method: 'POST',
@@ -220,21 +347,36 @@
       try {
         return { ok: res.ok, data: JSON.parse(text) };
       } catch {
-        return { ok: false, data: { error: text.substring(0, 200) } };
+        return { ok: false, data: { error: text.substring(0, 300) } };
       }
+    }
+
+    function copyToDecrypt(encVal) {
+      document.getElementById('dec-enc').value = encVal;
+      document.getElementById('dec-enc').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      document.getElementById('dec-enc').focus();
+    }
+
+    function copyToVerify(msg, sig) {
+      document.getElementById('ver-msg').value = msg;
+      document.getElementById('ver-sig').value = sig;
+      document.getElementById('ver-sig').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      document.getElementById('ver-sig').focus();
     }
 
     async function generateKeys() {
       const out = document.getElementById('generate-output');
-      out.innerHTML = 'Generating...';
+      out.style.display = 'block';
+      out.innerHTML = 'Generating 256-bit prime keys...';
       out.className = 'output';
       try {
         const { ok, data } = await fetchAPI('/api/generate', {});
         if (ok) {
+          currentKeys = data;
           out.innerHTML = `<strong>P:</strong> ${data.P || ''}\n<strong>Q:</strong> ${data.Q || ''}\n<strong>N:</strong> ${data.N || ''}\n<strong>T:</strong> ${data.T || ''}\n<strong>E:</strong> ${data.E || ''}\n<strong>D:</strong> ${data.D || ''}`;
           out.className = 'output success';
         } else {
-          out.textContent = 'Error: ' + (data.error || 'Unknown');
+          out.textContent = 'Error: ' + (data.error || 'Failed to generate keys');
           out.className = 'output error';
         }
       } catch (e) {
@@ -245,17 +387,24 @@
 
     async function encryptMsg() {
       const out = document.getElementById('encrypt-output');
+      out.style.display = 'block';
       out.innerHTML = 'Encrypting...';
       out.className = 'output';
+      
+      const payload = {
+        message: document.getElementById('enc-msg').value,
+        e: document.getElementById('enc-e').value,
+        n: document.getElementById('enc-n').value
+      };
+
       try {
-        const { ok, data } = await fetchAPI('/api/encrypt', {
-          message: document.getElementById('enc-msg').value
-        });
+        const { ok, data } = await fetchAPI('/api/encrypt', payload);
         if (ok) {
-          out.innerHTML = `<strong>Encrypted:</strong> ${data.Encrypted || ''}\n<strong>N:</strong> ${data.N || ''}\n<strong>E:</strong> ${data.E || ''}\n<strong>D:</strong> ${data.D || ''}\n<strong>Message:</strong> ${data.Message || ''}`;
+          const encVal = data.Encrypted || '';
+          out.innerHTML = `<strong>Encrypted:</strong>\n${encVal}\n\n<strong>N:</strong> ${data.N || ''}\n<strong>D:</strong> ${data.D || ''}\n<strong>Original Message:</strong> ${data.Message || ''}\n\n<button class="btn-secondary" onclick="copyToDecrypt('${encVal}')">&#x2935; Send Ciphertext to Decrypt (Step 3)</button>`;
           out.className = 'output success';
         } else {
-          out.textContent = 'Error: ' + (data.error || 'Unknown');
+          out.textContent = 'Error: ' + (data.error || 'Encryption failed');
           out.className = 'output error';
         }
       } catch (e) {
@@ -266,19 +415,25 @@
 
     async function decryptMsg() {
       const out = document.getElementById('decrypt-output');
+      out.style.display = 'block';
       out.innerHTML = 'Decrypting...';
       out.className = 'output';
+
+      const payload = {
+        encrypted: document.getElementById('dec-enc').value,
+        d: document.getElementById('dec-d').value,
+        n: document.getElementById('dec-n').value,
+        p: document.getElementById('dec-p').value,
+        q: document.getElementById('dec-q').value
+      };
+
       try {
-        const { ok, data } = await fetchAPI('/api/decrypt', {
-          encrypted: document.getElementById('dec-enc').value,
-          p: document.getElementById('dec-p').value,
-          q: document.getElementById('dec-q').value
-        });
+        const { ok, data } = await fetchAPI('/api/decrypt', payload);
         if (ok) {
-          out.innerHTML = `<strong>Decrypted:</strong> ${data.Decrypted || ''}\n<strong>Decoded:</strong> ${data.Decoded || ''}`;
+          out.innerHTML = `<strong>Decrypted (Integer):</strong>\n${data.Decrypted || ''}\n\n<strong>Decoded (Plaintext):</strong>\n<span class="tag-success" style="font-size:1.1rem;">${data.Decoded || ''}</span>`;
           out.className = 'output success';
         } else {
-          out.textContent = 'Error: ' + (data.error || 'Unknown');
+          out.textContent = 'Error: ' + (data.error || 'Decryption failed');
           out.className = 'output error';
         }
       } catch (e) {
@@ -289,17 +444,25 @@
 
     async function signMsg() {
       const out = document.getElementById('sign-output');
+      out.style.display = 'block';
       out.innerHTML = 'Signing...';
       out.className = 'output';
+
+      const msg = document.getElementById('sig-msg').value;
+      const payload = {
+        message: msg,
+        d: document.getElementById('sig-d').value,
+        n: document.getElementById('sig-n').value
+      };
+
       try {
-        const { ok, data } = await fetchAPI('/api/sign', {
-          message: document.getElementById('sig-msg').value
-        });
+        const { ok, data } = await fetchAPI('/api/sign', payload);
         if (ok) {
-          out.innerHTML = `<strong>Signature:</strong> ${data.Signature || ''}\n<strong>N:</strong> ${data.N || ''}\n<strong>D:</strong> ${data.D || ''}`;
+          const sigVal = data.Signature || '';
+          out.innerHTML = `<strong>Signature:</strong>\n${sigVal}\n\n<strong>N:</strong> ${data.N || ''}\n<strong>D:</strong> ${data.D || ''}\n\n<button class="btn-secondary" onclick="copyToVerify('${msg}', '${sigVal}')">&#x2935; Send to Verify (Step 5)</button>`;
           out.className = 'output success';
         } else {
-          out.textContent = 'Error: ' + (data.error || 'Unknown');
+          out.textContent = 'Error: ' + (data.error || 'Signing failed');
           out.className = 'output error';
         }
       } catch (e) {
@@ -310,19 +473,28 @@
 
     async function verifyMsg() {
       const out = document.getElementById('verify-output');
+      out.style.display = 'block';
       out.innerHTML = 'Verifying...';
       out.className = 'output';
+
+      const payload = {
+        message: document.getElementById('ver-msg').value,
+        signature: document.getElementById('ver-sig').value,
+        n: document.getElementById('ver-n').value,
+        e: document.getElementById('ver-e').value
+      };
+
       try {
-        const { ok, data } = await fetchAPI('/api/verify', {
-          message: document.getElementById('ver-msg').value,
-          signature: document.getElementById('ver-sig').value,
-          n: document.getElementById('ver-n').value
-        });
+        const { ok, data } = await fetchAPI('/api/verify', payload);
         if (ok) {
-          out.innerHTML = `<strong>Result:</strong> ${data.Result || ''}\n<strong>Message:</strong> ${data.Message || ''}\n<strong>Signature:</strong> ${data.Signature || ''}`;
-          out.className = 'output success';
+          const isValid = data.Result === 'Valid';
+          const badge = isValid
+            ? `<span class="tag-success">&#x2714; VALID SIGNATURE</span>`
+            : `<span class="tag-error">&#x2718; INVALID SIGNATURE</span>`;
+          out.innerHTML = `<strong>Result:</strong> ${badge}\n<strong>Message:</strong> ${data.Message || ''}\n<strong>Expected Code:</strong> ${data.Expected || ''}\n<strong>Decoded Signature:</strong> ${data.Decoded || ''}`;
+          out.className = 'output ' + (isValid ? 'success' : 'error');
         } else {
-          out.textContent = 'Error: ' + (data.error || 'Unknown');
+          out.textContent = 'Error: ' + (data.error || 'Verification failed');
           out.className = 'output error';
         }
       } catch (e) {
