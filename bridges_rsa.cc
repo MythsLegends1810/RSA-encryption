@@ -21,9 +21,12 @@ int main() {
 		return 1;
 	}
 
+	const char* assignmentEnv = getenv("BRIDGES_ASSIGNMENT");
+	int assignmentNum = (assignmentEnv != nullptr) ? atoi(assignmentEnv) : 1;
+
 	RSAKeys keys = getRSAKeys();
 
-	Bridges bridges(1, bridgesUser, bridgesKey);
+	Bridges bridges(assignmentNum, bridgesUser, bridgesKey);
 
 	bridges.setTitle("RSA Key Generation");
 	bridges.setDescription(

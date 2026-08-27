@@ -223,7 +223,10 @@
       <article class="card" style="grid-column: 1 / -1;">
         <h2>Generate Keys <span class="badge">1</span></h2>
         <p style="font-size:.9rem;color:var(--text-dim);margin:0 0 1rem;">Generate a fresh 256-bit prime RSA key pair ($P$, $Q$, $N$, $T$, $E$, $D$).</p>
-        <button id="btn-gen" onclick="generateKeys()">Generate RSA Keys</button>
+        <div class="btn-group">
+          <button id="btn-gen" onclick="generateKeys()">Generate RSA Keys</button>
+          <button class="btn-secondary" onclick="pushToBridges()">&#x1F310; Push to BRIDGES Visualizer</button>
+        </div>
         <div id="generate-output" class="output" aria-live="polite"></div>
       </article>
     </section>
@@ -305,7 +308,7 @@
       <article class="card">
         <h2>Verify <span class="badge">5</span></h2>
         <label for="ver-msg">Message to Verify</label>
-        <input id="ver-msg" placeholder="Original message..." />
+        <textarea id="ver-msg" placeholder="Original message to verify..."></textarea>
         <label for="ver-sig">Digital Signature</label>
         <input id="ver-sig" placeholder="Signature integer..." />
         
@@ -324,8 +327,40 @@
       </article>
     </section>
 
+    <div class="section-divider"></div>
+
+    <!-- BRIDGES Visualization -->
+    <section class="grid" aria-label="BRIDGES Visualization">
+      <article class="card" style="grid-column: 1 / -1;">
+        <h2>BRIDGES Visualizer <span class="badge">6</span></h2>
+        <p style="font-size:.9rem;color:var(--text-dim);margin:0 0 1rem;">
+          Push the RSA key relationships graph ($P, Q, N, T, E, D$, Public &amp; Private Keys) to your BRIDGES account (<a href="https://bridgesuncc.github.io/" target="_blank" rel="noopener noreferrer" style="color:var(--primary-2);text-decoration:underline;">BRIDGES UNCC</a>).
+        </p>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+          <div>
+            <label for="bridges-user">BRIDGES User ID <span class="label-hint">(saved in browser)</span></label>
+            <input id="bridges-user" placeholder="e.g. your_bridges_username" />
+          </div>
+          <div>
+            <label for="bridges-key">BRIDGES API Key <span class="label-hint">(saved in browser)</span></label>
+            <input id="bridges-key" type="password" placeholder="e.g. 123456789012" />
+          </div>
+          <div>
+            <label for="bridges-assignment">Assignment # <span class="label-hint">(default: 1)</span></label>
+            <input id="bridges-assignment" type="number" placeholder="1" value="1" />
+          </div>
+        </div>
+
+        <div class="btn-group">
+          <button id="btn-bridges" onclick="pushToBridges()">&#x1F310; Push to BRIDGES Visualizer</button>
+        </div>
+        <div id="bridges-output" class="output" aria-live="polite"></div>
+      </article>
+    </section>
+
     <footer>
-      <p>C++ RSA Backend &bull; Boost Multiprecision &bull; Web Interface</p>
+      <p>C++ RSA Backend &bull; Boost Multiprecision &bull; BRIDGES Visualizer &bull; Web Interface</p>
     </footer>
   </div>
 
@@ -351,17 +386,40 @@
       }
     }
 
-    function copyToDecrypt(encVal) {
-      document.getElementById('dec-enc').value = encVal;
-      document.getElementById('dec-enc').scrollIntoView({ behavior: 'smooth', block: 'center' });
-      document.getElementById('dec-enc').focus();
+    let lastEncryptData = {};
+    let lastSignData = {};
+
+    function copyToDecrypt() {
+      if (lastEncryptData.enc !== undefined) {
+        document.getElementById('dec-enc').value = lastEncryptData.enc;
+      }
+      if (lastEncryptData.n) {
+        document.getElementById('dec-n').value = lastEncryptData.n;
+      }
+      if (lastEncryptData.d) {
+        document.getElementById('dec-d').value = lastEncryptData.d;
+      }
+      const el = document.getElementById('dec-enc');
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.focus();
     }
 
-    function copyToVerify(msg, sig) {
-      document.getElementById('ver-msg').value = msg;
-      document.getElementById('ver-sig').value = sig;
-      document.getElementById('ver-sig').scrollIntoView({ behavior: 'smooth', block: 'center' });
-      document.getElementById('ver-sig').focus();
+    function copyToVerify() {
+      if (lastSignData.msg !== undefined) {
+        document.getElementById('ver-msg').value = lastSignData.msg;
+      }
+      if (lastSignData.sig !== undefined) {
+        document.getElementById('ver-sig').value = lastSignData.sig;
+      }
+      if (lastSignData.n) {
+        document.getElementById('ver-n').value = lastSignData.n;
+      }
+      if (lastSignData.e) {
+        document.getElementById('ver-e').value = lastSignData.e;
+      }
+      const el = document.getElementById('ver-sig');
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.focus();
     }
 
     async function generateKeys() {
@@ -401,7 +459,12 @@
         const { ok, data } = await fetchAPI('/api/encrypt', payload);
         if (ok) {
           const encVal = data.Encrypted || '';
-          out.innerHTML = `<strong>Encrypted:</strong>\n${encVal}\n\n<strong>N:</strong> ${data.N || ''}\n<strong>D:</strong> ${data.D || ''}\n<strong>Original Message:</strong> ${data.Message || ''}\n\n<button class="btn-secondary" onclick="copyToDecrypt('${encVal}')">&#x2935; Send Ciphertext to Decrypt (Step 3)</button>`;
+          lastEncryptData = {
+            enc: encVal,
+            n: data.N || currentKeys.N || '',
+            d: data.D || currentKeys.D || ''
+          };
+          out.innerHTML = `<strong>Encrypted:</strong>\n${encVal}\n\n<strong>N:</strong> ${data.N || ''}\n<strong>D:</strong> ${data.D || ''}\n<strong>Original Message:</strong> ${data.Message || ''}\n\n<button type="button" class="btn-secondary" onclick="copyToDecrypt()">&#x2935; Send Ciphertext to Decrypt (Step 3)</button>`;
           out.className = 'output success';
         } else {
           out.textContent = 'Error: ' + (data.error || 'Encryption failed');
@@ -459,7 +522,13 @@
         const { ok, data } = await fetchAPI('/api/sign', payload);
         if (ok) {
           const sigVal = data.Signature || '';
-          out.innerHTML = `<strong>Signature:</strong>\n${sigVal}\n\n<strong>N:</strong> ${data.N || ''}\n<strong>D:</strong> ${data.D || ''}\n\n<button class="btn-secondary" onclick="copyToVerify('${msg}', '${sigVal}')">&#x2935; Send to Verify (Step 5)</button>`;
+          lastSignData = {
+            msg: msg,
+            sig: sigVal,
+            n: data.N || currentKeys.N || '',
+            e: data.E || currentKeys.E || '65537'
+          };
+          out.innerHTML = `<strong>Signature:</strong>\n${sigVal}\n\n<strong>N:</strong> ${data.N || ''}\n<strong>E:</strong> ${data.E || ''}\n\n<button type="button" class="btn-secondary" onclick="copyToVerify()">&#x2935; Send to Verify (Step 5)</button>`;
           out.className = 'output success';
         } else {
           out.textContent = 'Error: ' + (data.error || 'Signing failed');
@@ -502,6 +571,74 @@
         out.className = 'output error';
       }
     }
+
+    function loadSavedBridgesCreds() {
+      const user = localStorage.getItem('bridges_user');
+      const key = localStorage.getItem('bridges_key');
+      const assign = localStorage.getItem('bridges_assignment');
+      if (user && document.getElementById('bridges-user')) document.getElementById('bridges-user').value = user;
+      if (key && document.getElementById('bridges-key')) document.getElementById('bridges-key').value = key;
+      if (assign && document.getElementById('bridges-assignment')) document.getElementById('bridges-assignment').value = assign;
+    }
+
+    async function pushToBridges() {
+      const userEl = document.getElementById('bridges-user');
+      const keyEl = document.getElementById('bridges-key');
+      const assignEl = document.getElementById('bridges-assignment');
+      const out = document.getElementById('bridges-output');
+
+      const user = (userEl ? userEl.value : '').trim();
+      const apiKey = (keyEl ? keyEl.value : '').trim();
+      const assignment = (assignEl ? assignEl.value : '1').trim() || '1';
+
+      if (!user || !apiKey) {
+        out.style.display = 'block';
+        out.textContent = 'Please enter your BRIDGES User ID and API Key.';
+        out.className = 'output error';
+        if (userEl) {
+          userEl.focus();
+          userEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        return;
+      }
+
+      localStorage.setItem('bridges_user', user);
+      localStorage.setItem('bridges_key', apiKey);
+      localStorage.setItem('bridges_assignment', assignment);
+
+      out.style.display = 'block';
+      out.innerHTML = 'Connecting and pushing RSA graph to BRIDGES Visualizer...';
+      out.className = 'output';
+
+      const payload = {
+        username: user,
+        apiKey: apiKey,
+        assignment: assignment,
+        p: currentKeys.P || '',
+        q: currentKeys.Q || '',
+        n: currentKeys.N || '',
+        t: currentKeys.T || '',
+        e: currentKeys.E || '',
+        d: currentKeys.D || ''
+      };
+
+      try {
+        const { ok, data } = await fetchAPI('/api/bridges', payload);
+        if (ok) {
+          const vizUrl = data.url || `https://bridges-cs.herokuapp.com/assignments/${assignment}/${user}`;
+          out.innerHTML = `<span class="tag-success">&#x2714; ${data.message || 'Pushed to BRIDGES successfully!'}</span>\n\n<strong>Visualizer URL:</strong> <a href="${vizUrl}" target="_blank" rel="noopener noreferrer" style="color:var(--primary-2);text-decoration:underline;">${vizUrl}</a>\n\n<a href="${vizUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;padding:.55rem 1.1rem;margin-top:.75rem;text-decoration:none;border-radius:8px;font-weight:bold;color:var(--bg-dark);background:var(--primary);cursor:pointer;">&#x2197; Open in BRIDGES Visualizer</a>`;
+          out.className = 'output success';
+        } else {
+          out.textContent = 'Error: ' + (data.error || 'Failed to push to BRIDGES');
+          out.className = 'output error';
+        }
+      } catch (e) {
+        out.textContent = 'Network error: ' + e.message;
+        out.className = 'output error';
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', loadSavedBridgesCreds);
   </script>
 </body>
 </html>

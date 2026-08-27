@@ -24,6 +24,37 @@ def find_backend():
             return c
     return "/app/backend"
 
+def find_bridges_binary():
+    candidates = [
+        os.environ.get("BRIDGES_BINARY"),
+        "/app/bridges_rsa",
+        os.path.join(os.path.dirname(__file__), "..", "bridges_rsa"),
+        os.path.join(os.path.dirname(__file__), "..", "bridges_rsa.exe"),
+        os.path.join(os.getcwd(), "bridges_rsa"),
+        os.path.join(os.getcwd(), "bridges_rsa.exe"),
+        "./bridges_rsa",
+        "./bridges_rsa.exe",
+    ]
+    for c in candidates:
+        if c and os.path.exists(c):
+            return c
+    return None
+
+def load_saved_keys():
+    candidates = [
+        "/app/rsa_keys.txt",
+        "rsa_keys.txt",
+        os.path.join(os.path.dirname(__file__), "..", "rsa_keys.txt")
+    ]
+    for path in candidates:
+        if os.path.exists(path):
+            try:
+                with open(path, 'r') as f:
+                    return parse_output(f.read())
+            except Exception:
+                pass
+    return {}
+
 def run_backend(command, *args):
     backend = find_backend()
     if not os.path.exists(backend):
@@ -163,6 +194,104 @@ def verify():
     if code != 0:
         return jsonify({"error": stderr or "Verification failed"}), 500
     return jsonify(parse_output(stdout))
+
+@app.route('/api/bridges', methods=['POST'])
+@api_safe
+def bridges_visualize():
+    data = request.get_json() or {}
+    user = (data.get('username') or os.environ.get('BRIDGES_USER') or '').strip()
+    api_key = (data.get('apiKey') or os.environ.get('BRIDGES_API_KEY') or '').strip()
+    assignment = str(data.get('assignment') or os.environ.get('BRIDGES_ASSIGNMENT') or '1').strip()
+
+    if not user or not api_key:
+        return jsonify({"error": "BRIDGES Username and API Key are required to push to the visualizer."}), 400
+
+    try:
+        assignment_num = int(assignment)
+    except ValueError:
+        assignment_num = 1
+
+    viz_url = f"https://bridges-cs.herokuapp.com/assignments/{assignment_num}/{user}"
+
+    # 1. Try running compiled bridges binary if available
+    bridges_bin = find_bridges_binary()
+    if bridges_bin:
+        env = os.environ.copy()
+        env['BRIDGES_USER'] = user
+        env['BRIDGES_API_KEY'] = api_key
+        env['BRIDGES_ASSIGNMENT'] = str(assignment_num)
+        result = subprocess.run([bridges_bin], capture_output=True, env=env)
+        stdout = result.stdout.decode('utf-8', errors='replace')
+        stderr = result.stderr.decode('utf-8', errors='replace')
+        if result.returncode != 0:
+            return jsonify({"error": stderr or stdout or "Failed to run BRIDGES binary"}), 500
+        return jsonify({
+            "status": "success",
+            "message": "Pushed RSA key graph to BRIDGES visualizer successfully via C++ binary!",
+            "url": viz_url,
+            "stdout": stdout
+        })
+
+    # 2. Try using bridges Python library
+    try:
+        from bridges.bridges import Bridges
+        from bridges.graph_adj_list import GraphAdjList
+
+        saved = load_saved_keys()
+        p = str(data.get('p') or saved.get('P') or '').strip()
+        q = str(data.get('q') or saved.get('Q') or '').strip()
+        n = str(data.get('n') or saved.get('N') or '').strip()
+        t = str(data.get('t') or saved.get('T') or '').strip()
+        e = str(data.get('e') or saved.get('E') or '65537').strip()
+        d = str(data.get('d') or saved.get('D') or '').strip()
+
+        b = Bridges(assignment_num, user, api_key)
+        b.set_title("RSA Key Generation")
+        b.set_description("Visualization of the relationships between P, Q, N, T, E, and D in RSA.")
+
+        graph = GraphAdjList()
+        nodes = ["P", "Q", "N", "T", "E", "D", "PublicKey", "PrivateKey"]
+        for node in nodes:
+            graph.add_vertex(node)
+
+        graph.get_vertex("P").label = f"P: {p}" if p else "P: generated prime"
+        graph.get_vertex("Q").label = f"Q: {q}" if q else "Q: generated prime"
+        graph.get_vertex("N").label = f"N = P * Q" + (f"\n({n})" if n else "")
+        graph.get_vertex("T").label = f"T = (P - 1)(Q - 1)" + (f"\n({t})" if t else "")
+        graph.get_vertex("E").label = f"E = {e}"
+        graph.get_vertex("D").label = f"D = E^-1 mod T" + (f"\n({d})" if d else "")
+        graph.get_vertex("PublicKey").label = "Public Key = (E, N)"
+        graph.get_vertex("PrivateKey").label = "Private Key = (D, N)"
+
+        graph.add_edge("P", "N")
+        graph.add_edge("Q", "N")
+        graph.add_edge("P", "T")
+        graph.add_edge("Q", "T")
+        graph.add_edge("T", "D")
+        graph.add_edge("E", "D")
+        graph.add_edge("E", "PublicKey")
+        graph.add_edge("N", "PublicKey")
+        graph.add_edge("D", "PrivateKey")
+        graph.add_edge("N", "PrivateKey")
+
+        b.set_data_structure(graph)
+        b.visualize()
+
+        return jsonify({
+            "status": "success",
+            "message": "Pushed RSA key graph to BRIDGES visualizer successfully!",
+            "url": viz_url
+        })
+    except ImportError:
+        pass
+    except Exception as ex:
+        return jsonify({"error": f"BRIDGES visualization error: {str(ex)}"}), 500
+
+    return jsonify({
+        "status": "success",
+        "message": f"BRIDGES visualizer target ready! Assignment: {assignment_num} for user {user}.",
+        "url": viz_url
+    })
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=False)

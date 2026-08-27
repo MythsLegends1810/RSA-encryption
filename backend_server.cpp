@@ -45,6 +45,10 @@ bool loadKeysFromFile(RSAKeys& keys) {
         if (colon == string::npos) continue;
         string key = line.substr(0, colon);
         string value = line.substr(colon + 1);
+        while (!value.empty() && (value.back() == '\r' || value.back() == ' ' || value.back() == '\t' || value.back() == '\n')) {
+            value.pop_back();
+        }
+        if (value.empty()) continue;
         if (key == "P") keys.P = cpp_int(value);
         else if (key == "Q") keys.Q = cpp_int(value);
         else if (key == "N") keys.N = cpp_int(value);
@@ -148,11 +152,12 @@ int main(int argc, char* argv[]) {
         
         cpp_int encoded = convertToInt(message);
         cpp_int signature = powm(encoded, useD, useN);
+        cpp_int pubE = keys.E.is_zero() ? cpp_int(65537) : keys.E;
         cout << "Message:" << message << endl;
         cout << "Encoded:" << encoded << endl;
         cout << "Signature:" << signature << endl;
         cout << "N:" << useN << endl;
-        cout << "D:" << useD << endl;
+        cout << "E:" << pubE << endl;
     } else if (command == "verify" && argc >= 4) {
         string message = argv[2];
         string sigStr = argv[3];
@@ -161,11 +166,24 @@ int main(int argc, char* argv[]) {
         // Override with provided N and E if given
         cpp_int useN = keys.N;
         cpp_int useE = keys.E.is_zero() ? cpp_int(65537) : keys.E;
-        if (argc >= 5) {
-            useN = cpp_int(argv[4]);
-        }
-        if (argc >= 6) {
-            useE = cpp_int(argv[5]);
+        
+        if (argc >= 6 && string(argv[4]) != "" && string(argv[5]) != "") {
+            cpp_int arg1(argv[4]);
+            cpp_int arg2(argv[5]);
+            if (arg1 > arg2) {
+                useN = arg1;
+                useE = arg2;
+            } else {
+                useE = arg1;
+                useN = arg2;
+            }
+        } else if (argc >= 5 && string(argv[4]) != "") {
+            cpp_int arg1(argv[4]);
+            if (arg1 > 1000000) {
+                useN = arg1;
+            } else {
+                useE = arg1;
+            }
         }
         
         cpp_int decoded = powm(signature, useE, useN);
