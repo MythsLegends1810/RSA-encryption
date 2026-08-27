@@ -210,14 +210,27 @@
   </div>
 
   <script>
+    async function fetchAPI(url, body) {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const text = await res.text();
+      try {
+        return { ok: res.ok, data: JSON.parse(text) };
+      } catch {
+        return { ok: false, data: { error: text.substring(0, 200) } };
+      }
+    }
+
     async function generateKeys() {
       const out = document.getElementById('generate-output');
       out.innerHTML = 'Generating...';
       out.className = 'output';
       try {
-        const res = await fetch('/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
-        const data = await res.json();
-        if (res.ok) {
+        const { ok, data } = await fetchAPI('/api/generate', {});
+        if (ok) {
           out.innerHTML = `<strong>P:</strong> ${data.P || ''}\n<strong>Q:</strong> ${data.Q || ''}\n<strong>N:</strong> ${data.N || ''}\n<strong>T:</strong> ${data.T || ''}\n<strong>E:</strong> ${data.E || ''}\n<strong>D:</strong> ${data.D || ''}`;
           out.className = 'output success';
         } else {
@@ -231,18 +244,14 @@
     }
 
     async function encryptMsg() {
-      const msg = document.getElementById('enc-msg').value;
       const out = document.getElementById('encrypt-output');
       out.innerHTML = 'Encrypting...';
       out.className = 'output';
       try {
-        const res = await fetch('/api/encrypt', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: msg })
+        const { ok, data } = await fetchAPI('/api/encrypt', {
+          message: document.getElementById('enc-msg').value
         });
-        const data = await res.json();
-        if (res.ok) {
+        if (ok) {
           out.innerHTML = `<strong>Encrypted:</strong> ${data.Encrypted || ''}\n<strong>N:</strong> ${data.N || ''}\n<strong>E:</strong> ${data.E || ''}\n<strong>D:</strong> ${data.D || ''}\n<strong>Message:</strong> ${data.Message || ''}`;
           out.className = 'output success';
         } else {
@@ -256,20 +265,16 @@
     }
 
     async function decryptMsg() {
-      const enc = document.getElementById('dec-enc').value;
-      const p = document.getElementById('dec-p').value;
-      const q = document.getElementById('dec-q').value;
       const out = document.getElementById('decrypt-output');
       out.innerHTML = 'Decrypting...';
       out.className = 'output';
       try {
-        const res = await fetch('/api/decrypt', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ encrypted: enc, p: p, q: q })
+        const { ok, data } = await fetchAPI('/api/decrypt', {
+          encrypted: document.getElementById('dec-enc').value,
+          p: document.getElementById('dec-p').value,
+          q: document.getElementById('dec-q').value
         });
-        const data = await res.json();
-        if (res.ok) {
+        if (ok) {
           out.innerHTML = `<strong>Decrypted:</strong> ${data.Decrypted || ''}\n<strong>Decoded:</strong> ${data.Decoded || ''}`;
           out.className = 'output success';
         } else {
@@ -283,18 +288,14 @@
     }
 
     async function signMsg() {
-      const msg = document.getElementById('sig-msg').value;
       const out = document.getElementById('sign-output');
       out.innerHTML = 'Signing...';
       out.className = 'output';
       try {
-        const res = await fetch('/api/sign', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: msg })
+        const { ok, data } = await fetchAPI('/api/sign', {
+          message: document.getElementById('sig-msg').value
         });
-        const data = await res.json();
-        if (res.ok) {
+        if (ok) {
           out.innerHTML = `<strong>Signature:</strong> ${data.Signature || ''}\n<strong>N:</strong> ${data.N || ''}\n<strong>D:</strong> ${data.D || ''}`;
           out.className = 'output success';
         } else {
@@ -308,20 +309,16 @@
     }
 
     async function verifyMsg() {
-      const msg = document.getElementById('ver-msg').value;
-      const sig = document.getElementById('ver-sig').value;
-      const n = document.getElementById('ver-n').value;
       const out = document.getElementById('verify-output');
       out.innerHTML = 'Verifying...';
       out.className = 'output';
       try {
-        const res = await fetch('/api/verify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: msg, signature: sig, n: n })
+        const { ok, data } = await fetchAPI('/api/verify', {
+          message: document.getElementById('ver-msg').value,
+          signature: document.getElementById('ver-sig').value,
+          n: document.getElementById('ver-n').value
         });
-        const data = await res.json();
-        if (res.ok) {
+        if (ok) {
           out.innerHTML = `<strong>Result:</strong> ${data.Result || ''}\n<strong>Message:</strong> ${data.Message || ''}\n<strong>Signature:</strong> ${data.Signature || ''}`;
           out.className = 'output success';
         } else {
