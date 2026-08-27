@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RSA Encryption Web UI</title>
+  <style>
+    :root {
+      --bg-dark: #0d1117;
+      --surface: #161b22;
+      --surface-2: #1c2128;
+      --primary: #58a6ff;
+      --primary-2: #79c0ff;
+      --accent: #f85149;
+      --text: #c9d1d9;
+      --text-dim: #8b949e;
+      --border: #30363d;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 0;
+      background: var(--bg-dark);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.25rem;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .subtitle { color: var(--text-dim); font-size: 1.05rem; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.75rem;
+      transition: transform .15s ease, box-shadow .15s ease;
+    }
+    .card:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(0,0,0,0.45); }
+
+    .card h2 {
+      margin-top: 0;
+      font-size: 1.15rem;
+      color: var(--primary-2);
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+    }
+    .badge {
+      display: inline-block;
+      padding: 0.15rem 0.5rem;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      background: var(--primary);
+      color: var(--bg-dark);
+    }
+
+    label { display: block; font-size: .85rem; color: var(--text-dim); margin-bottom: .35rem; }
+    input, textarea {
+      width: 100%;
+      padding: .65rem .75rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text);
+      font-family: ui-monospace, SFMono-Regular, monospace;
+      font-size: .9rem;
+      margin-bottom: 1rem;
+      transition: border-color .2s;
+    }
+    input:focus, textarea:focus { outline: none; border-color: var(--primary); }
+    textarea { resize: vertical; min-height: 80px; }
+
+    button {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      padding: .75rem 1.25rem;
+      border-radius: 8px;
+      border: none;
+      background: var(--primary);
+      color: var(--bg-dark);
+      font-weight: 700;
+      font-size: .95rem;
+      cursor: pointer;
+      transition: background .15s, transform .1s;
+    }
+    button:hover { background: var(--primary-2); transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
+
+    .output {
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem;
+      margin-top: 1rem;
+      font-family: ui-monospace, SFMono-Regular, monospace;
+      font-size: .8rem;
+      line-height: 1.5;
+      min-height: 80px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow-x: auto;
+    }
+    .output.success { border-color: #238636; }
+    .output.error { border-color: var(--accent); }
+
+    .section-divider {
+      border-top: 1px solid var(--border);
+      margin: 2.5rem 0 1.5rem;
+    }
+
+    footer {
+      text-align: center;
+      color: var(--text-dim);
+      font-size: .85rem;
+      margin-top: 3rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>RSA Encryption</h1>
+      <p class="subtitle">Web UI for the C++ backend — generate keys, encrypt, decrypt, sign &amp; verify</p>
+    </header>
+
+    <section class="grid" aria-label="Key Management">
+      <article class="card">
+        <h2>Generate Keys <span class="badge">1</span></h2>
+        <p style="font-size:.9rem;color:var(--text-dim);margin-top:.25rem;">Generate a fresh RSA key pair using prime number generation.</p>
+        <button onclick="generateKeys()">Generate RSA Keys</button>
+        <div id="generate-output" class="output" aria-live="polite"></div>
+      </article>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <section class="grid" aria-label="Encryption &amp; Decryption">
+      <article class="card">
+        <h2>Encrypt <span class="badge">2</span></h2>
+        <label for="enc-msg">Message</label>
+        <textarea id="enc-msg" placeholder="Enter message to encrypt..."></textarea>
+        <button onclick="encryptMsg()">Encrypt</button>
+        <div id="encrypt-output" class="output" aria-live="polite"></div>
+      </article>
+
+      <article class="card">
+        <h2>Decrypt <span class="badge">3</span></h2>
+        <label for="dec-enc">Encrypted value</label>
+        <input id="dec-enc" placeholder="Encrypted integer..." />
+        <label for="dec-p">P (prime)</label>
+        <input id="dec-p" placeholder="P..." />
+        <label for="dec-q">Q (prime)</label>
+        <input id="dec-q" placeholder="Q..." />
+        <button onclick="decryptMsg()">Decrypt</button>
+        <div id="decrypt-output" class="output" aria-live="polite"></div>
+      </article>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <section class="grid" aria-label="Signing &amp; Verification">
+      <article class="card">
+        <h2>Sign <span class="badge">4</span></h2>
+        <label for="sig-msg">Message</label>
+        <textarea id="sig-msg" placeholder="Message to sign..."></textarea>
+        <button onclick="signMsg()">Sign with Private Key</button>
+        <div id="sign-output" class="output" aria-live="polite"></div>
+      </article>
+
+      <article class="card">
+        <h2>Verify <span class="badge">5</span></h2>
+        <label for="ver-msg">Message</label>
+        <input id="ver-msg" placeholder="Original message..." />
+        <label for="ver-sig">Signature</label>
+        <input id="ver-sig" placeholder="Signature integer..." />
+        <label for="ver-n">N (modulus)</label>
+        <input id="ver-n" placeholder="N..." />
+        <button onclick="verifyMsg()">Verify with Public Key</button>
+        <div id="verify-output" class="output" aria-live="polite"></div>
+      </article>
+    </section>
+
+    <footer>
+      <p>Backed by <strong>C++ RSA backend</strong> using Boost Multiprecision. Deployed via Docker.</p>
+    </footer>
+  </div>
+
+  <script>
+    async function generateKeys() {
+      const out = document.getElementById('generate-output');
+      out.innerHTML = 'Generating...';
+      out.className = 'output';
+      try {
+        const res = await fetch('/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+        const data = await res.json();
+        if (res.ok) {
+          out.innerHTML = `<strong>P:</strong> ${data.P || ''}\n<strong>Q:</strong> ${data.Q || ''}\n<strong>N:</strong> ${data.N || ''}\n<strong>T:</strong> ${data.T || ''}\n<strong>E:</strong> ${data.E || ''}\n<strong>D:</strong> ${data.D || ''}`;
+          out.className = 'output success';
+        } else {
+          out.textContent = 'Error: ' + (data.error || 'Unknown');
+          out.className = 'output error';
+        }
+      } catch (e) {
+        out.textContent = 'Network error: ' + e.message;
+        out.className = 'output error';
+      }
+    }
+
+    async function encryptMsg() {
+      const msg = document.getElementById('enc-msg').value;
+      const out = document.getElementById('encrypt-output');
+      out.innerHTML = 'Encrypting...';
+      out.className = 'output';
+      try {
+        const res = await fetch('/api/encrypt', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: msg })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          out.innerHTML = `<strong>Encrypted:</strong> ${data.Encrypted || ''}\n<strong>N:</strong> ${data.N || ''}\n<strong>E:</strong> ${data.E || ''}\n<strong>D:</strong> ${data.D || ''}\n<strong>Message:</strong> ${data.Message || ''}`;
+          out.className = 'output success';
+        } else {
+          out.textContent = 'Error: ' + (data.error || 'Unknown');
+          out.className = 'output error';
+        }
+      } catch (e) {
+        out.textContent = 'Network error: ' + e.message;
+        out.className = 'output error';
+      }
+    }
+
+    async function decryptMsg() {
+      const enc = document.getElementById('dec-enc').value;
+      const p = document.getElementById('dec-p').value;
+      const q = document.getElementById('dec-q').value;
+      const out = document.getElementById('decrypt-output');
+      out.innerHTML = 'Decrypting...';
+      out.className = 'output';
+      try {
+        const res = await fetch('/api/decrypt', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ encrypted: enc, p: p, q: q })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          out.innerHTML = `<strong>Decrypted:</strong> ${data.Decrypted || ''}\n<strong>Decoded:</strong> ${data.Decoded || ''}`;
+          out.className = 'output success';
+        } else {
+          out.textContent = 'Error: ' + (data.error || 'Unknown');
+          out.className = 'output error';
+        }
+      } catch (e) {
+        out.textContent = 'Network error: ' + e.message;
+        out.className = 'output error';
+      }
+    }
+
+    async function signMsg() {
+      const msg = document.getElementById('sig-msg').value;
+      const out = document.getElementById('sign-output');
+      out.innerHTML = 'Signing...';
+      out.className = 'output';
+      try {
+        const res = await fetch('/api/sign', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: msg })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          out.innerHTML = `<strong>Signature:</strong> ${data.Signature || ''}\n<strong>N:</strong> ${data.N || ''}\n<strong>D:</strong> ${data.D || ''}`;
+          out.className = 'output success';
+        } else {
+          out.textContent = 'Error: ' + (data.error || 'Unknown');
+          out.className = 'output error';
+        }
+      } catch (e) {
+        out.textContent = 'Network error: ' + e.message;
+        out.className = 'output error';
+      }
+    }
+
+    async function verifyMsg() {
+      const msg = document.getElementById('ver-msg').value;
+      const sig = document.getElementById('ver-sig').value;
+      const n = document.getElementById('ver-n').value;
+      const out = document.getElementById('verify-output');
+      out.innerHTML = 'Verifying...';
+      out.className = 'output';
+      try {
+        const res = await fetch('/api/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: msg, signature: sig, n: n })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          out.innerHTML = `<strong>Result:</strong> ${data.Result || ''}\n<strong>Message:</strong> ${data.Message || ''}\n<strong>Signature:</strong> ${data.Signature || ''}`;
+          out.className = 'output success';
+        } else {
+          out.textContent = 'Error: ' + (data.error || 'Unknown');
+          out.className = 'output error';
+        }
+      } catch (e) {
+        out.textContent = 'Network error: ' + e.message;
+        out.className = 'output error';
+      }
+    }
+  </script>
+</body>
+</html>
